@@ -1,55 +1,83 @@
-"use client"
+"use client";
 
-import { editTodo } from '@/api'
-import {Task} from '@/types'
-import React, { useState } from 'react'
+import { Task } from "@/types/tasks";
+import { useEffect, useRef, useState } from "react";
+import { deleteTodo, updateTodo } from "../../../api";
+import { useRouter } from "next/navigation";
+import { PencilAltIcon, SaveIcon, TrashIcon } from "@heroicons/react/solid";
 
-interface TodoProps{
-    todo:Task
+interface TaskProps {
+  task: Task;
 }
 
-const Todo =({todo}:TodoProps) =>{
-    const [isEditing, setIsEditing] =useState(false)
-    const[editedTaskTitle,setEditedTaskTitle] = useState(todo.text)
+export default function Todo({ task }: TaskProps) {
+  const router = useRouter();
 
-const handleEdit =async () => {
-    setIsEditing(true) 
-}
+  const inputRef = useRef<HTMLInputElement>(null);
 
-const handleSave =async () => {
-  await editTodo(todo.id, editedTaskTitle)
-  setIsEditing(false) 
-}
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTaskText, setEditedTaskText] = useState(task.text);
 
-  return(
-    <li 
-      key={todo.id}
-      className="flex justify-between p-4 bg-white border-l-4 border-blue-500 rounded shadow">
-      
+  useEffect(() => {
+    if (isEditing) {
+      // isEditingがtrueならinputにフォーカスを当てる
+      inputRef.current?.focus();
+    }
+  }, [isEditing]);
+
+  const handleEditButtonClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleSaveButtonClick = async () => {
+    await updateTodo(task.id, editedTaskText);
+    setIsEditing(false);
+    router.refresh();
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedTaskText(event.target.value);
+  };
+
+  const handleDelete = async () => {
+    await deleteTodo(task.id);
+    router.refresh();
+  };
+
+  return (
+    <li
+      key={task.id}
+      className="flex justify-between p-4 bg-white border-l-4 border-blue-500 rounded shadow"
+    >
       {isEditing ? (
-        <input 
-          type='text' 
-          className='mr-2 py-1 px-2 rounded border-gray-400 border'
-          value={editedTaskTitle}
-          onChange={(e:React.ChangeEvent<HTMLInputElement>) =>
-            setEditedTaskTitle(e.target.value)
-          }
+        <input
+          ref={inputRef}
+          value={editedTaskText}
+          onChange={handleInputChange}
+          className="mr-2 py-1 px-2 rounded border-gray-400 border"
         />
       ) : (
-      <span>{todo.text}</span>
+        <span className="text-gray-700">{task.text}</span>
       )}
-      <div>
-        {isEditing ? ( <button className="text-blue-500 mr-3" onClick={handleSave}>
-          save
-        </button>) : ( <button className="text-green-500 mr-3" onClick={handleEdit}>
-          edit
-        </button>)}
-       
-        <button className="text-red-500">Delete</button>
+      <div className="flex">
+        {isEditing ? (
+          <SaveIcon
+            onClick={handleSaveButtonClick}
+            className="h-5 w-5 text-blue-500 hover:text-blue-700 cursor-pointer mr-3"
+          />
+        ) : (
+          <>
+            <PencilAltIcon
+              onClick={handleEditButtonClick}
+              className="h-5 w-5 text-green-400 hover:text-green-700 cursor-pointer mr-3"
+            />
+          </>
+        )}
+        <TrashIcon
+          onClick={handleDelete}
+          className="h-5 w-5 text-red-500 hover:text-red-700 cursor-pointer"
+        />
       </div>
     </li>
-  )
-
+  );
 }
-
-export default Todo

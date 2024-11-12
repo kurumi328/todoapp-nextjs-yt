@@ -1,39 +1,37 @@
-"use client"
+"use client";
 
-import { addAbortListener } from "events";
-import React, { ChangeEvent, FormEvent, useState } from "react";
-import {v4 as uuidv4} from 'uuid'
+import { ChangeEvent, FormEvent, useState } from "react";
+import { addTodo } from "../../../api";
+import { v4 as uuidv4 } from "uuid";
+import { useRouter } from "next/navigation";
 
-const AddTask = () => {
+export default function AddTask() {
+  const router = useRouter();
 
-    const [taskTitle,setTaskTitle] = useState("")
+  const [newTaskValue, setNewTaskValue] = useState<string>("");
 
-    const handSubmit=async (e:FormEvent) =>{
-        e.preventDefault()
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    await addTodo({ id: uuidv4(), text: newTaskValue });
+    setNewTaskValue("");
 
-        await addTodo({id:uuidv4(),text: taskTitle})
+    router.refresh();
+  };
 
-        setTaskTitle("")
-    }
-        
-
-    return (
-    <form className="mb-4 space-y-3" onSubmit={handSubmit}>
-        <input 
-            type="text" 
-            className='w-full border px-4 py-2 rounded-lg focus:outline-none focus:border-blue-400' 
-            onChange={(e:ChangeEvent<HTMLInputElement>) => 
-                setTaskTitle(e.target.value)
-            }
-            value={taskTitle}
-        />
-        <button className='w-full px-4 py-2 text-white bg-blue-500 rounded transform hover:bg-blue-400 hover:scale-95 duration-200'>Add Task</button>
+  return (
+    <form className="mb-4 space-y-3" onSubmit={handleSubmit}>
+      <input
+        value={newTaskValue}
+        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+          setNewTaskValue(e.target.value)
+        }
+        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-400"
+        type="text"
+        placeholder="New task..."
+      />
+      <button className="w-full px-4 py-2 text-white bg-blue-500 rounded transform transition-transform duration-200 hover:bg-blue-400 hover:scale-95">
+        Add task
+      </button>
     </form>
-    );
-};
-
-export default AddTask;
-function addTodo(arg0: { id: string; text: string; }) {
-    throw new Error("Function not implemented.");
+  );
 }
-
